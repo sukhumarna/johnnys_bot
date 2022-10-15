@@ -9,6 +9,8 @@ from linebot.exceptions import (
 )
 from linebot.models import *
 
+from johnnys_calendar import Calendar
+
 app = Flask(__name__)
 
 # Get environment variables
@@ -19,6 +21,8 @@ CHANNEL_SECRET = os.environ.get('CHANNEL_SECRET')
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 # Channel Secret
 handler = WebhookHandler(CHANNEL_SECRET)
+
+calendar_mng = Calendar()
 
 
 @app.route("/callback", methods=['POST'])
@@ -39,6 +43,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     message = TextSendMessage(text=event.message.text)
+    calendar_mng.get_calendar(filter_nm=message)
     line_bot_api.reply_message(event.reply_token, message)
 
 

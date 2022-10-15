@@ -1,3 +1,5 @@
+import datetime as dt
+import logging
 import sqlite3
 from sqlite3 import Error
 
@@ -8,10 +10,10 @@ class DatabaseManager:
         self.table_name = table_nm
         self.conn = None
 
-        print('create connection...')
+        logging.info('create connection...')
         self._create_connection()
 
-        print('create table if not exists')
+        logging.info('create table if not exists')
         self._create_table()
 
     def _create_connection(self):
@@ -38,6 +40,13 @@ class DatabaseManager:
         except Error as e:
             print(e)
 
+    def select_all_events(self):
+        sql = f'SELECT * FROM {self.table_name}'
+        cur = self.conn.cursor()
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return rows
+
     def insert_events(self, events):
         sql = f''' INSERT INTO {self.table_name}(name,start_at)
                             VALUES(?,?) '''
@@ -46,16 +55,19 @@ class DatabaseManager:
             cur.execute(sql, event)
         self.conn.commit()
 
+    def select_today_events(self):
+        today = dt.date.today()  #.strftime('%Y-%m-%d')
+        logging.info(f'current date is {today}')
+        # sql = f'''
+        #         SELECT * FROM {self.table_name}
+        #         WHERE DATE(start_at) = {today}'''
+        sql = f"""SELECT * FROM {self.table_name} WHERE DATE(start_at) = ?"""
+
+        cur = self.conn.cursor()
+        cur.execute(sql, (today,))
+        rows = cur.fetchall()
+        return rows
+
     def close(self):
         self.conn.close()
-
-
-# db = DatabaseManager(db_path='./johnnys_database.db', table_nm='calendar')
-# db.insert_event((
-#     'Kurosaku',
-#     dt.datetime(year=2022, month=10, day=22,
-#                 hour=22, minute=0)
-# ))
-# db.conn.commit()
-# db.conn.close()
 

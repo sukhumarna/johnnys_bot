@@ -1,6 +1,6 @@
 import datetime as dt
 import scrapy
-
+from scrapy.crawler import CrawlerProcess
 from database import DatabaseManager
 
 
@@ -14,8 +14,21 @@ def is_today(date: str) -> bool:
         return False
 
 
+class JohnnysCrawler:
+
+    @staticmethod
+    def start_crawling(self):
+        process = CrawlerProcess()
+        process.crawl(JohnnysSpider)
+        process.start()
+
+
 class JohnnysSpider(scrapy.Spider):
     name = 'johnnys_calendar'
+
+    def __init__(self, db_manager: DatabaseManager, *args, **kwargs):
+        self.db_manager = db_manager
+        super().__init__(*args, **kwargs)
 
     def start_requests(self):
         url = 'https://www.johnnys-net.jp/page?id=calendar'
@@ -53,10 +66,8 @@ class JohnnysSpider(scrapy.Spider):
                                            hour=event_hour, minute=int(event_minute))
 
                     j_events.append((event_name, start_at))
-            db = DatabaseManager(db_path='./johnnys_database.db', table_nm='calendar')
             print('insert johnny\'s events into the database')
-            db.insert_events(j_events)
-            db.close()
+            self.db_manager.insert_events(j_events)
 
         else:
             print('[ERROR] current date is', current_dt)
